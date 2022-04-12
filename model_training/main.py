@@ -4,17 +4,17 @@
 #create training set / validation set
 #train the model
 
-import src.data.load_data as loader
-import src.models.cnn as classifier
+import data.raw.load_data as loader
+import models.cnn as classifier
 import os
 import tensorflow as tf
 from tensorflow import keras
 
 src = 'https://dsticlasskeras.s3.eu-west-3.amazonaws.com/kagglecatsanddogs_3367a.zip'
-dst = '/content/classification/data/raw'
+dst = './data/raw'
 
-#loader.get_data(src,dst)
-#loader.unzip_data(dst)
+loader.get_data(src,dst)
+loader.unzip_data(dst)
 
 #clean the data
 num_skipped = 0
@@ -37,10 +37,10 @@ print("Deleted %d images" % num_skipped)
 
 
 image_size = (180, 180)
-batch_size = 32
+batch_size = 2
 
 train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "classification/data/raw/PetImages",
+    "./data/raw/PetImages",
     validation_split=0.2,
     subset="training",
     seed=1337, 
@@ -50,7 +50,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size,
 )
 val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    "classification/data/raw/PetImages",
+    "./data/raw/PetImages",
     validation_split=0.2,
     subset="validation",
     seed=1337,
@@ -60,7 +60,7 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 
 model = classifier.make_model(input_shape=image_size + (3,), num_classes=2)
 
-epochs = 50
+epochs = 1
 
 callbacks = [
     keras.callbacks.ModelCheckpoint("save_at_{epoch}.h5"),
@@ -73,3 +73,8 @@ model.compile(
 model.fit(
     train_ds, epochs=epochs, callbacks=callbacks, validation_data=val_ds,
 )
+
+TRACKING_URI = "http://52.215.94.6:5000/"
+mlflow.tracking.set_tracking_uri(TRACKING_URI)
+mlflow.start_run()
+
